@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         // KK: permit /api/auth/** here when register/login are added
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults()); // phase 1; replaced by JWT filter in phase 2
         return http.build();
