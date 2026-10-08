@@ -1,7 +1,9 @@
 package com.example.carRental.service.impl;
 
+import com.example.carRental.dto.LoginRequest;
 import com.example.carRental.dto.RegisterRequest;
 import com.example.carRental.exception.EmailAlreadyExistsException;
+import com.example.carRental.exception.InvalidCredentialsException;
 import com.example.carRental.model.Role;
 import com.example.carRental.model.User;
 import com.example.carRental.repository.UserRepository;
@@ -36,5 +38,19 @@ public class UserServiceImpl implements UserService {
                 .role(Role.USER)
                 .build();
         return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User login(LoginRequest request) {
+        String email = request.email().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException();
+        }
+        return user;
     }
 }

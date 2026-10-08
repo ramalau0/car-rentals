@@ -1,5 +1,6 @@
 package com.example.carRental.controller;
 
+import com.example.carRental.dto.LoginRequest;
 import com.example.carRental.dto.RegisterRequest;
 import com.example.carRental.dto.UserResponse;
 import com.example.carRental.service.UserService;
@@ -23,4 +24,9 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(UserResponse.from(userService.register(request)));
     }
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(UserResponse.from(userService.login(request)));
+    }
+
 }
