@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -50,5 +52,17 @@ public class VehicleServiceImpl implements VehicleService {
         vehicle.setRegistrationNumber(request.registrationNumber());
         vehicle.setDailyRate(request.dailyRate());
         return VehicleResponse.from(vehicleRepository.save(vehicle));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VehicleResponse> findAll(VehicleStatus status) {
+        List<Vehicle> vehicles = (status == null)
+                ? vehicleRepository.findAll()
+                : vehicleRepository.findByStatus(status);
+
+        return vehicles.stream()
+                .map(VehicleResponse::from)
+                .toList();
     }
 }
