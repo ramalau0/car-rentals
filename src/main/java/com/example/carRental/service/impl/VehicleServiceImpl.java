@@ -4,15 +4,21 @@ import com.example.carRental.dto.VehicleRequest;
 import com.example.carRental.dto.VehicleResponse;
 import com.example.carRental.exception.ConflictException;
 import com.example.carRental.exception.NotFoundException;
+import com.example.carRental.model.RentalStatus;
 import com.example.carRental.model.Vehicle;
 import com.example.carRental.model.VehicleStatus;
+import com.example.carRental.repository.RentalRepository;
 import com.example.carRental.repository.VehicleRepository;
+import com.example.carRental.service.VehicleDeleteResult;
 import com.example.carRental.service.VehicleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +26,7 @@ import java.util.List;
 public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final RentalRepository rentalRepository;
 
     @Override
     public VehicleResponse create(VehicleRequest request) {
@@ -64,5 +71,24 @@ public class VehicleServiceImpl implements VehicleService {
         return vehicles.stream()
                 .map(VehicleResponse::from)
                 .toList();
+    }
+    @Override
+    @Transactional
+    public VehicleDeleteResult delete(Long id) {
+        Optional<Vehicle> found = vehicleRepository.findByIdForUpdate(id);
+        if (found.isEmpty()) {
+            return VehicleDeleteResult.NOT_FOUND;
+        }
+        Vehicle vehicle = found.get();
+
+        if (rentalRepository.existsByVehicleIdAndStatus(id, RentalStatus.ACTIVE)) {
+            return VehicleDeleteResult.HAS_ACTIVE_RENTAL;
+        }
+        if (rentalRepository.existsByVehicleId(id)) {
+            vehicle.setStatus(VehicleStatus.RETIRED); // has history: keep the row
+            return VehicleDeleteResult.RETIRED;
+        }
+        vehicleRepository.delete(vehicle);
+        return VehicleDeleteResult.DELETED;
     }
 }

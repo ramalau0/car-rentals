@@ -13,15 +13,13 @@ import java.util.Optional;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
-
     List<Vehicle> findByStatus(VehicleStatus status);
-
     boolean existsByRegistrationNumber(String registrationNumber);
-
     boolean existsByRegistrationNumberAndIdNot(String registrationNumber, Long id);
 
     // Locks the row so two people cannot rent the same car at the same moment
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select v from Vehicle v where v.id = :id")
     Optional<Vehicle> findByIdForUpdate(@Param("id") Long id);
+
 }

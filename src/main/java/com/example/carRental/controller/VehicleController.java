@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -35,5 +36,16 @@ public class VehicleController {
     @GetMapping
     public List<VehicleResponse> getAll(@RequestParam(required = false) VehicleStatus status) {
         return vehicleService.findAll(status);
+    }
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        return switch (vehicleService.delete(id)) {
+            case DELETED, RETIRED -> ResponseEntity.noContent().build();
+            case NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Vehicle not found: " + id));
+            case HAS_ACTIVE_RENTAL -> ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Vehicle " + id + " has an active rental and cannot be removed"));
+        };
     }
 }
